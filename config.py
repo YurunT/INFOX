@@ -6,7 +6,7 @@ class Config:
         'db': 'infox_db',
         'host': '127.0.0.1',
         'port': 27017,
-        'connect': False,
+        # 'connect': False,
         # 'username': os.environ.get('INFOX_DATABASE_USERNAME'),
         # 'password': os.environ.get('INFOX_DATABASE_PASSWORD'),
     }
