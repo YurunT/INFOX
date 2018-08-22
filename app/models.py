@@ -60,6 +60,14 @@ class ProjectFork(db.Document):
     variable = db.ListField(db.StringField())
     function_name = db.ListField(db.StringField())
 
+class FileWords(db.Document):
+    full_name = db.StringField(required=True)
+    fork_name = db.StringField()
+    project_name = db.StringField()
+    file_name = db.StringField()
+    word_name = db.StringField()
+    lineNum_list = db.ListField(db.IntField())
+
 class Project(db.Document):
     project_name = db.StringField(required=True, primary_key=True)
     language = db.StringField()
@@ -113,6 +121,7 @@ class User(UserMixin, db.Document):
     @property
     def is_administrator(self):
         return self.can(Permission.ADMINISTER)
+
 
 
 class AnonymousUser(AnonymousUserMixin):

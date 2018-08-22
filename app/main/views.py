@@ -225,7 +225,9 @@ def find_repos():
             db_followed_project(_input)
             flash(Markup('The repo (%s) is already in INFOX. Followed successfully! Please click <a href="/project/%s" class="alert-link">here</a> to view.' % (_input, _input)), 'success')
         else:
+
             if analyser.check_repo(_input, current_user.github_access_token) is not None:
+                print('The repo (%s) starts loading into INFOX. We will send you an email when it is finished. Please wait.' % _input)
                 analyser.add_repos(current_user.username, [_input])
                 db_followed_project(_input)
                 flash('The repo (%s) starts loading into INFOX. We will send you an email when it is finished. Please wait.' % _input, 'info')
