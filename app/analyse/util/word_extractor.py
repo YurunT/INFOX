@@ -43,6 +43,7 @@ def word_split_by_char(s):
     return result
 
 def word_process(word):
+    #将word词尾不为[0-9A-Za-z_]的去掉
     search_result = re.search("[0-9A-Za-z_]", word)
     if not search_result:
         return ""
@@ -93,14 +94,31 @@ def stem_process(tokens):
     return tokens
 """
 
-def lemmatize_process(tokens):
-    for try_times in range(3): # NLTK is not thread-safe, use simple retry to fix it.
-        try:
-            result = [lemmatizer.lemmatize(word) for word in tokens]
-        except:
-            print('error on lemmatize_process')
-            time.sleep(5)
-    return tokens
+def lemmatize_process(obj):
+    if type(obj) is list:
+        for try_times in range(3): # NLTK is not thread-safe, use simple retry to fix it.
+            try:
+                result = [lemmatizer.lemmatize(word) for word in obj]
+            except:
+                print('error on lemmatize_process')
+                time.sleep(5)
+        return result
+    else:
+        result0={}
+        result={}
+        for try_times in range(3):
+            try:
+                for filename,nword in obj.items():
+                    for word in nword.keys():
+                        lemmatize_word=lemmatizer.lemmatize(word)
+                        result0[lemmatize_word]=nword[word]
+                    result[filename]=result0
+                    result0={}
+            except:
+                print('error on lemmatize_process')
+                time.sleep(5)
+        return result
+
 
 def move_other_char(text):
     return re.sub("[^0-9A-Za-z_]", "", text)
@@ -132,7 +150,18 @@ def get_words_from_file(file, text):
     tokens = list(tokens)
 
     # stemmed_tokens = [PorterStemmer().stem(word) for word in tokens] # do stem on the tokens
+
     return tokens
+
+def map_token_line(text,tokens):
+    print("map_token_line")
+    split_text = split_text_to_lines(text)
+    print("split_text:")
+    print(split_text)
+    word_dic = list_word_linenumber(split_text, tokens)
+    print("word dic:")
+    print(word_dic)
+    return word_dic
 
 def get_words(text):
     return get_words_from_file('1.txt', text)
@@ -153,3 +182,44 @@ def get_top_words(tokens, top_number, list_option = True):
 # just for test
 def get_top_words_from_text(text, top_number=10):
     return get_top_words(get_words(text), top_number)
+
+def split_text_to_lines(text,line_max=20):
+    text = text.lower()
+    split_text = text.split("\n")  # 行是以(1)回车符分割的(2)一行最多有多少个数字假设微line_max
+    for line in split_text:
+        if line =="":
+            del split_text[split_text.index(line)]
+        if len(line) > line_max:
+            lines = []
+            m = int (len(line) / line_max)
+            for i in range(m):
+                lines.append(line[i * line_max:(i + 1) * line_max])
+            if(len(line)>m*line_max ):
+                lines.append(line[(m) * line_max:])
+            index=split_text.index(line)
+            for x in lines:
+                split_text.insert(index,x)
+                index+=1
+            del split_text[index]
+    return split_text
+
+def list_word_linenumber(split_text,tokens):
+    # dic2就相当于{'is': [2, 1, 0], 'me': [1, 0], 'this': [2, 1, 0]}
+    dic = {}
+    dic2 = {}
+    list = []
+    i = 0
+    while (i < len(split_text)):
+        dic[split_text[i]] = i  # 假设行数都是从0开始递增的
+        i += 1
+
+    for token in tokens:
+        for sentence in dic.keys():
+            if token in sentence:
+                list.append(dic.get(sentence))
+        dic2[token] = list
+        list = []
+    return dic2
+
+
+
