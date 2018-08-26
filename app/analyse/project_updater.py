@@ -29,6 +29,7 @@ class ForkUpdater:
         self.all_lemmatize_tokens_dic={}
     
     def get_tf_idf(self, tokens, top_number, list_option = True):
+        print("this is get_tf_idf")
         tf_idf_dict = self.code_clone_crawler.calc_key_words_tfidf(word_extractor.get_counter(tokens))
         result = [(x, y) for x, y in sorted(tf_idf_dict.items(), key=lambda x: x[1], reverse=True)][:top_number]
         if list_option:
@@ -37,6 +38,7 @@ class ForkUpdater:
             return dict(result)
 
     def file_analyse(self, file):
+        print("start file_analyse for this fork :", self.fork_name)
         file_name = file["file_full_name"]
         file_suffix = file["file_suffix"]
         diff_link = file["diff_link"]
@@ -45,10 +47,14 @@ class ForkUpdater:
 
         # process on changed code, get the tokens from changed code
         tokens = word_extractor.get_words_from_file(file_name, added_code)
-        tokens_dic=word_extractor.map_token_line(added_code,tokens)
+
+        split_text = word_extractor.split_text_to_lines(added_code)
+        tokens_dic = word_extractor.list_word_linenumber(split_text, tokens)
+        print("tokens_dic:")
+        print(tokens_dic)
         # lemmatize_tokens = word_extractor.lemmatize_process(tokens)
         # stemmed_tokens = word_extractor.stem_process(tokens)
-
+        print("start saving ChangedFile")
         # Load changed files into database.
         ChangedFile(
             full_name=self.project_name + '/' + self.fork_name + '/' + file_name,
@@ -66,9 +72,19 @@ class ForkUpdater:
             # key_words_lemmatize_tfidf_dict=self.get_tf_idf(lemmatize_tokens, 10, False),
             # key_stemmed_words=word_extractor.get_top_words(stemmed_tokens, 10),
             # key_stemmed_words_dict=word_extractor.get_top_words(stemmed_tokens, 10, False),
+            #split_text = split_text
         ).save()
+        print(" start saving FileLines ")
 
-        # Load current file's key words to fork.
+        FileLines(
+            full_name=self.project_name + '/' + self.fork_name + '/' + file_name,
+            file_name=file_name,
+            fork_name=self.fork_name,
+            project_name=self.project_name,
+            line_num=split_text
+        ).save()
+        print("FileLines saved!")
+        #Load current file's key words to fork.
         for x in tokens:
             self.all_tokens.append(x)
         # for x in lemmatize_tokens:
@@ -76,6 +92,8 @@ class ForkUpdater:
         # for x in stemmed_tokens:
         #     self.all_stemmed_tokens.append(x)
         self.all_tokens_dic[file_name]=tokens_dic
+        print("all_tokens_dic for this time:")
+        print(self.all_tokens_dic)
 
     def work(self):
         # Ignore the fork if it doesn't have commits after fork.
@@ -111,7 +129,7 @@ class ForkUpdater:
             if compare_result is not None:
                 localfile_tool.write_to_file(self.diff_result_path, compare_result)
 
-        print("start file_analyse for this fork %s",self.fork_name)
+
         for file in compare_result["file_list"]:
             #compare_result 是一个字典,compare_result["file_list"]是一个list, 这个list里都每一项都是一个字典,也就是说file是一个字典
             try:
@@ -132,9 +150,12 @@ class ForkUpdater:
         full_name = self.project_name + '/' + self.fork_name
 
         file_distinct = list(OrderedDict.fromkeys([x["file_full_name"] for x in compare_result["file_list"]]))
-        
+
+        print("all_tokens_dic:")
+        print(self.all_tokens_dic)
         self.all_lemmatize_tokens = word_extractor.lemmatize_process(self.all_tokens)
         self.all_lemmatize_tokens_dic=word_extractor.lemmatize_process(self.all_tokens_dic)
+
 
 
         project_name_stop_words = (self.project_name + '/' + self.fork_name).split('/')
@@ -143,6 +164,8 @@ class ForkUpdater:
             nword=dict(filter(lambda x:x[0] not in project_name_stop_words,nword.items()))
             self.all_lemmatize_tokens_dic[filename]=nword
 
+        print("all_lemmatize_tokens_dic:")
+        print(self.all_lemmatize_tokens_dic)
 
         # Update forks into database.
         ProjectFork(
@@ -169,8 +192,7 @@ class ForkUpdater:
             # key_stemmed_words_dict=word_extractor.get_top_words(self.all_stemmed_tokens, 10, False),
         ).save()
 
-        print("all_lemmatize_tokens_dic:")
-        print(self.all_lemmatize_tokens_dic)
+
         print("saving filewords!!!")
         for file_name,nwords in self.all_lemmatize_tokens_dic.items():
             for word_name,numList in nwords.items():

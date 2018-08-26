@@ -323,7 +323,12 @@ $(document).ready(function() {
             </td>
             
             <td>
-                {{ ", ".join(fork.key_words_lemmatize_tfidf[:6] | word_length_limit) }}
+                <!-- {{ ", ".join(fork.key_words_lemmatize_tfidf[:6] | word_length_limit) }} -->
+
+                {% for keyword in fork.key_words_lemmatize_tfidf[:6] | word_length_limit %}
+                    <a href="{{ url_for('main.load_keyword_related_block', keyword=keyword,project_name=fork.project_name) }}">{{ keyword }}</a>
+                {% endfor %}
+
             </td>
 
             <td>{{ fork.last_committed_time.strftime('%Y-%m-%d') }}</td>

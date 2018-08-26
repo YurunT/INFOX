@@ -6,6 +6,7 @@ import time
 from collections import Counter
 from nltk.stem.porter import PorterStemmer
 from nltk.stem import WordNetLemmatizer
+from ...models import *
 
 from . import language_tool
 
@@ -153,16 +154,6 @@ def get_words_from_file(file, text):
 
     return tokens
 
-def map_token_line(text,tokens):
-    print("map_token_line")
-    split_text = split_text_to_lines(text)
-    print("split_text:")
-    print(split_text)
-    word_dic = list_word_linenumber(split_text, tokens)
-    print("word dic:")
-    print(word_dic)
-    return word_dic
-
 def get_words(text):
     return get_words_from_file('1.txt', text)
 
@@ -183,7 +174,14 @@ def get_top_words(tokens, top_number, list_option = True):
 def get_top_words_from_text(text, top_number=10):
     return get_top_words(get_words(text), top_number)
 
-def split_text_to_lines(text,line_max=20):
+def split_text_to_lines(text,line_max=120):
+    """
+            Args:
+                text: the raw text of the file
+                line_max: the max count of words in one line
+            Returns:
+                A dic of the lines of the the raw text of the file. Such as : {'this is me':0,'he is good':1}
+        """
     text = text.lower()
     split_text = text.split("\n")  # 行是以(1)回车符分割的(2)一行最多有多少个数字假设微line_max
     for line in split_text:
@@ -201,25 +199,32 @@ def split_text_to_lines(text,line_max=20):
                 split_text.insert(index,x)
                 index+=1
             del split_text[index]
-    return split_text
+    i=0 #suppose start from 0
+    dic_text={}
+    for line in split_text:
+        dic_text[line]=i
+        i+=1
+    return dic_text
 
 def list_word_linenumber(split_text,tokens):
-    # dic2就相当于{'is': [2, 1, 0], 'me': [1, 0], 'this': [2, 1, 0]}
+    """
+               Args:
+                   split_text: the dic of split text of raw text. Such as:{'this is me':0,'he is good':1}
+                   tokens: filtered tokens from raw text
+               Returns:
+                   A dic of the mapping from tokens to the num of lines where they exist.Such as:{'is': [2, 1, 0], 'me': [1, 0], 'this': [2, 1, 0]}
+    """
+
     dic = {}
-    dic2 = {}
     list = []
-    i = 0
-    while (i < len(split_text)):
-        dic[split_text[i]] = i  # 假设行数都是从0开始递增的
-        i += 1
 
     for token in tokens:
-        for sentence in dic.keys():
+        for sentence,num in split_text.items():
             if token in sentence:
-                list.append(dic.get(sentence))
-        dic2[token] = list
+                list.append(num)
+        dic[token] = list
         list = []
-    return dic2
+    return dic
 
 
 
