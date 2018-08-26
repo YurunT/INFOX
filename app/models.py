@@ -26,6 +26,7 @@ class ChangedFile(db.Document):
     variable = db.ListField(db.StringField())
     class_name = db.ListField(db.StringField())
     function_name = db.ListField(db.StringField())
+
     
 
 
@@ -61,12 +62,19 @@ class ProjectFork(db.Document):
     function_name = db.ListField(db.StringField())
 
 class FileWords(db.Document):
-    full_name = db.StringField(required=True)
-    fork_name = db.StringField()
-    project_name = db.StringField()
-    file_name = db.StringField()
-    word_name = db.StringField()
-    lineNum_list = db.ListField(db.IntField())
+    full_name = db.StringField()
+    project_name = db.StringField(required=True)  # used to query
+    word_name = db.StringField(required=True)# used to query
+    fork_name = db.StringField()# to be queried
+    file_name = db.StringField()# to be queried
+    lineNum_list = db.ListField(db.IntField())#to be queried
+
+class FileLines(db.Document):
+    full_name = db.StringField()
+    file_name = db.StringField(required=True)#used to query
+    fork_name = db.StringField(required=True)#used to query
+    project_name = db.StringField(required=True)#used to query
+    line_num = db.DictField()#used to query,notice:key must be string
 
 class Project(db.Document):
     project_name = db.StringField(required=True, primary_key=True)

@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block page_content %}
+
+<h1 style="color: #0c0c0c">Project: {{project_name}}    Keyword: {{keyword}}</h1>
+    <hr>
+    {% for fork_name,file_list in fork_dic.items() %}
+        <div>
+            <h2 style="background-color: #868e96">Fork: {{ fork_name }}</h2>
+        {% for file_item in file_list  %}
+            <div>
+            {% for file,lines in file_item.items() %}
+                <h3>
+                    File: {{ file }}
+                </h3>
+                {% for sentence,num in lines.items()  %}
+                    {% if num in lineNum_list %}
+                        <div>
+                            <div style="background-color: #9f421d ; display:inline ;width: 100px; height:100px"  >{{ num }}</div>
+                            <div style="color: #cb301c ; display:inline; height:100px" >{{ sentence }}</div>
+                        </div>
+
+
+                    {% else %}
+                        <div>
+                            <div style="background-color: #959f9f ; display:inline ;width: 100px; height:100px"   >{{ num }}</div>
+                            <div style="display: inline; height:100px">{{ sentence }}</div>
+                        </div>
+
+                    {% endif %}
+                {% endfor %}
+            {% endfor %}
+            </div>
+        {% endfor %}
+        </div>
+    {% endfor %}
+{% endblock %}

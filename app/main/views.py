@@ -257,6 +257,44 @@ def about():
         return redirect(url_for('main.about'))
     return render_template('about.html', form=form)
 
+@main.route('/load_keyword_related_block', methods=['GET', 'POST'])
+def load_keyword_related_block():
+
+    keyword=request.args.get('keyword')
+    project_name1=request.args.get('project_name')
+    _selected_fork_info=FileWords.objects(project_name=project_name1,word_name=keyword)
+    file_dic={}
+    fork_dic={}
+
+    # init fork_dic to be dic containing list : {fork_name1:[file_dic1,file_dic2,...],...}
+    for info0 in _selected_fork_info:
+        fork_name0=info0.fork_name
+        fork_dic[fork_name0]=[]
+
+    for info in _selected_fork_info:
+        fork_name1=info.fork_name
+        file_name1 = info.file_name
+        lineNum_list =info.lineNum_list
+        #long_name=fork_name1+'//'+file_name1
+
+        lines = FileLines.objects(project_name=project_name1, fork_name=fork_name1,file_name=file_name1).first()
+        #notice:if do not use first() method, the lines would be a querySET! NOT A queried ITEM. Use either first() or loop to get each item in set.
+        lines_dic=lines.line_num
+        # lines_list={}
+        # for num in lineNum_list:
+        #     for sentence, lineN in lines_dic.items():
+        #         if num == lineN:
+        #             lines_list[num]=sentence
+
+
+
+        file_dic[file_name1]=lines_dic#file_dic : {'readme.md':{2:'this is good',3:'that is good'}}
+        fork_dic[fork_name1].append(file_dic)#fork_dic: {'tensorflow/tensorflow':[ file_dic1,file_dic2  ]}
+        file_dic={}
+
+    return render_template('code_related_code_block.html', project_name=project_name1, keyword=keyword,fork_dic=fork_dic,lineNum_list=lineNum_list)
+
+
 # ---------------- Following is all admin required. ----------------
 
 @main.route('/admin_manage')

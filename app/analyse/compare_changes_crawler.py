@@ -87,7 +87,8 @@ def fetch_diff_code(project_full_name):
     except:
         raise Exception('error on fetch compare page on %s!' % project_full_name)
 
-    diff_list = r.text.split('diff --git')
+    diff_list = r.text.split('diff --git')#raw text for each file, list
+    #print("diff_list:",diff_list)
     for diff in diff_list[1:]:
         try:
             file_full_name = re.findall('a\/.*? b\/(.*?)\n', diff)[0]
@@ -101,16 +102,19 @@ def fetch_diff_code(project_full_name):
             continue
 
         st = re.search('@@.*?-.*?\+.*?@@', diff)
+        #print("st:",st)
         if st is None:
             continue
 
-        parts = re.split('@@.*?-.*?\+.*?@@', diff[st.start():])
+        parts = re.split('@@.*?-.*?\+.*?@@', diff[st.start():])#pure text for each file
+        #print("parts:",parts)
         start_with_plus_regex = re.compile('^\++')
         start_with_minus_regex = re.compile('^\-+')
         
         diff_code = ""
         diff_code_line = 0
         for part in parts:
+            print("type of part:",type(part))
             # only filter added code
             added_lines_of_code = filter(lambda x: (x) and (x[0] == '+'), part.splitlines())
             added_lines_of_code = [start_with_plus_regex.sub('', x) for x in added_lines_of_code]
@@ -152,8 +156,8 @@ if __name__ == '__main__':
     # fetch_compare_page('Nutz95/Smoothieware')
     #fetch_compare_page('mkosieradzki/protobuf')
     t = fetch_compare_page('SkyNet3D/Marlin')
-    for i in t["file_list"]:
-        print(i["file_full_name"])
-    for i in t["commit_list"]:
-        print(i["title"])
+    # for i in t["file_list"]:
+    #     print(i["file_full_name"])
+    # for i in t["commit_list"]:
+    #     print(i["title"])
     #fetch_compare_page('aJanker/TypeChef')
