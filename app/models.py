@@ -64,17 +64,15 @@ class ProjectFork(db.Document):
 class FileWords(db.Document):
     full_name = db.StringField()
     project_name = db.StringField(required=True)  # used to query
-    word_name = db.StringField(required=True)# used to query
+    word_name=db.StringField(required=True) # used to query
     fork_name = db.StringField()# to be queried
-    file_name = db.StringField()# to be queried
-    lineNum_list = db.ListField(db.IntField())#to be queried
+    file_part_pmlist_dic = db.DictField()#to be queried
+
 
 class FileLines(db.Document):
-    full_name = db.StringField()
-    file_name = db.StringField(required=True)#used to query
     fork_name = db.StringField(required=True)#used to query
     project_name = db.StringField(required=True)#used to query
-    line_num = db.DictField()#used to query,notice:key must be string
+    file_part_line_num_dic = db.DictField()#used to query,notice:key must be string
 
 class Project(db.Document):
     project_name = db.StringField(required=True, primary_key=True)

@@ -26,7 +26,8 @@ class ForkUpdater:
         self.all_tokens_dic={}
         # self.all_stemmed_tokens = []
         self.all_lemmatize_tokens = []
-        self.all_lemmatize_tokens_dic={}
+        self.file_part_dic=OrderedDict()
+
     
     def get_tf_idf(self, tokens, top_number, list_option = True):
         print("this is get_tf_idf")
@@ -44,17 +45,22 @@ class ForkUpdater:
         diff_link = file["diff_link"]
         added_code = file["added_code"]
         changed_line = file["added_line"]
+        part_dic=file["part_dic"]
 
         # process on changed code, get the tokens from changed code
         tokens = word_extractor.get_words_from_file(file_name, added_code)
-
-        split_text = word_extractor.split_text_to_lines(added_code)
+        split_text = word_extractor.split_text_to_lines(part_dic)
         tokens_dic = word_extractor.list_word_linenumber(split_text, tokens)
+        print("added_code:")
+        print(added_code)
+
+        print("split_text:")
+        print(split_text)
         print("tokens_dic:")
         print(tokens_dic)
         # lemmatize_tokens = word_extractor.lemmatize_process(tokens)
         # stemmed_tokens = word_extractor.stem_process(tokens)
-        print("start saving ChangedFile")
+
         # Load changed files into database.
         ChangedFile(
             full_name=self.project_name + '/' + self.fork_name + '/' + file_name,
@@ -74,26 +80,21 @@ class ForkUpdater:
             # key_stemmed_words_dict=word_extractor.get_top_words(stemmed_tokens, 10, False),
             #split_text = split_text
         ).save()
-        print(" start saving FileLines ")
-
-        FileLines(
-            full_name=self.project_name + '/' + self.fork_name + '/' + file_name,
-            file_name=file_name,
-            fork_name=self.fork_name,
-            project_name=self.project_name,
-            line_num=split_text
-        ).save()
-        print("FileLines saved!")
+        print("finish saving ChangedFile")
         #Load current file's key words to fork.
         for x in tokens:
             self.all_tokens.append(x)
-        # for x in lemmatize_tokens:
-        #     self.all_lemmatize_tokens.append(x)
-        # for x in stemmed_tokens:
-        #     self.all_stemmed_tokens.append(x)
-        self.all_tokens_dic[file_name]=tokens_dic
-        print("all_tokens_dic for this time:")
-        print(self.all_tokens_dic)
+
+        file_name=file_name.replace('.','*')#notice key of dic in mongodb must not contain '.' or '$' ,so replace '.' with '*'
+        self.all_tokens_dic[file_name]=tokens_dic#{'filename1':{'@@ -46,6 +46,15 @@':[{'is': [46, 1, 0], 'me': [1, 0]},{'is': [2, 1, 0], 'me': [1, 0]}],...},...}
+        self.file_part_dic[file_name]=split_text#{'filename1':{'@@ -46,6 +46,15 @@':[{'this is me':46,'+he is good':47,...},{'-this is me':48,...}],...},...}
+        print("finish file_analyse for",file_name)
+
+
+
+
+
+
 
     def work(self):
         # Ignore the fork if it doesn't have commits after fork.
@@ -135,37 +136,39 @@ class ForkUpdater:
             try:
                 self.file_analyse(file)#分析compare_result里的某一个file
             except:
+                print("pass file_analyse")
                 pass
-        try:
-            tmp = source_code_analyser.get_info_from_fork_changed_code(self.fork_name)
-            changed_code_name_list = tmp['name_list']
-            changed_code_func_list = tmp['func_list']
-        except:
-            changed_code_name_list = []
-            changed_code_func_list = []
+        # try:
+        #     tmp = source_code_analyser.get_info_from_fork_changed_code(self.fork_name)
+        #     changed_code_name_list = tmp['name_list']
+        #     changed_code_func_list = tmp['func_list']
+        # except:
+        #     changed_code_name_list = []
+        #     changed_code_func_list = []
         # print(word_extractor.get_top_words(changed_code_name_list, 10))
         
 
         # Update forks in database.
-        full_name = self.project_name + '/' + self.fork_name
+
+        # full_name = self.project_name + '/' + self.fork_name
 
         file_distinct = list(OrderedDict.fromkeys([x["file_full_name"] for x in compare_result["file_list"]]))
 
         print("all_tokens_dic:")
         print(self.all_tokens_dic)
+        print("file_part_dic")
+        print(self.file_part_dic)
         self.all_lemmatize_tokens = word_extractor.lemmatize_process(self.all_tokens)
-        self.all_lemmatize_tokens_dic=word_extractor.lemmatize_process(self.all_tokens_dic)
+        # self.all_lemmatize_tokens_dic=word_extractor.lemmatize_process(self.all_tokens_dic)
 
 
 
         project_name_stop_words = (self.project_name + '/' + self.fork_name).split('/')
         self.all_lemmatize_tokens = list(filter(lambda x: x not in project_name_stop_words, self.all_lemmatize_tokens))
-        for filename,nword in self.all_lemmatize_tokens_dic.items():
-            nword=dict(filter(lambda x:x[0] not in project_name_stop_words,nword.items()))
-            self.all_lemmatize_tokens_dic[filename]=nword
+        # for filename,nword in self.all_lemmatize_tokens_dic.items():
+        #     nword=dict(filter(lambda x:x[0] not in project_name_stop_words,nword.items()))
+        #     self.all_lemmatize_tokens_dic[filename]=nword
 
-        print("all_lemmatize_tokens_dic:")
-        print(self.all_lemmatize_tokens_dic)
 
         # Update forks into database.
         ProjectFork(
@@ -185,8 +188,8 @@ class ForkUpdater:
             # key_words_tfidf=self.get_tf_idf(self.all_tokens, 10),
             # key_words_tf_idf_dict=self.get_tf_idf(self.all_tokens, 10, False),
             # key_words_lemmatize_tfidf_dict=self.get_tf_idf(self.all_lemmatize_tokens, 10, False),
-            variable=word_extractor.get_top_words(changed_code_name_list, 10),
-            function_name=word_extractor.get_top_words(changed_code_func_list, 10),
+            # variable=word_extractor.get_top_words(changed_code_name_list, 10),
+            # function_name=word_extractor.get_top_words(changed_code_func_list, 10),
             last_updated_time=datetime.utcnow(),
             # key_stemmed_words=word_extractor.get_top_words(self.all_stemmed_tokens, 10),
             # key_stemmed_words_dict=word_extractor.get_top_words(self.all_stemmed_tokens, 10, False),
@@ -194,18 +197,56 @@ class ForkUpdater:
 
 
         print("saving filewords!!!")
-        for file_name,nwords in self.all_lemmatize_tokens_dic.items():
-            for word_name,numList in nwords.items():
+        word_dic=self.rebuild_alltokensdic()
+        #{'word1':{'filename1':{'@@ -46,6 +46,15 @@':[[46,1,0],[1,0]],'@@ -50,6 +50,15 @@':[[4,5,12],[2]],...},...},'word2':{...},...}
+        #notice: fork_name R file_part_pmlist_dic => 1:1
+        for word_name,dic0 in word_dic.items():
                 FileWords(
                     full_name=self.project_name + '/' + self.fork_name,
+                    project_name=self.project_name,#used to query
+                    word_name = word_name,#used to query
                     fork_name=self.fork_name,
-                    project_name=self.project_name,
-                    file_name = file_name,
-                    word_name = word_name,
-                    lineNum_list = numList
+                    file_part_pmlist_dic = dic0
                 ).save()
         print("fininsh saving filewords!")
+        print(" start saving FileLines ")
+        FileLines(
+            project_name=self.project_name,
+            fork_name=self.fork_name,
+            file_part_line_num_dic=self.file_part_dic
+        ).save()
+        print("FileLines saved!")
+        print("finish work for this fork:",self.fork_name)
 
+    def rebuild_alltokensdic(self):
+        """
+        :return: new structure of self.all_tokens_dic,like:
+        {'word1':{'filename1':{'@@ -46,6 +46,15 @@':[[46,1,0],[1,0]],'@@ -50,6 +50,15 @@':[[4,5,12],[2]],...},...},'word2':{...},...}
+        """
+        word_dic={}
+        for word in self.all_lemmatize_tokens:
+            file_dic={}
+            for file_name, file_content in self.all_tokens_dic.items():
+                part_dic = {}
+                for part_tag,part_content in file_content.items():
+                    plus,minus=part_content
+                    list1=[]
+                    list2=[]
+                    for w,l in plus.items():
+                        if w == word:
+                            list1=l
+                    for w2,l2 in minus.items():
+                        if w2==word:
+                            list2=l
+                    if list1 == [] and list2 == []:
+                        continue
+                    part_dic[part_tag]=[list1,list2]
+                if part_dic!={}:
+                    file_dic[file_name]=part_dic
+            if file_dic!={}:
+                word_dic[word]=file_dic
+
+        return word_dic
 
 
 

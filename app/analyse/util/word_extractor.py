@@ -7,7 +7,7 @@ from collections import Counter
 from nltk.stem.porter import PorterStemmer
 from nltk.stem import WordNetLemmatizer
 from ...models import *
-
+from collections import OrderedDict
 from . import language_tool
 
 stemmer = PorterStemmer()
@@ -96,29 +96,15 @@ def stem_process(tokens):
 """
 
 def lemmatize_process(obj):
-    if type(obj) is list:
-        for try_times in range(3): # NLTK is not thread-safe, use simple retry to fix it.
-            try:
-                result = [lemmatizer.lemmatize(word) for word in obj]
-            except:
-                print('error on lemmatize_process')
-                time.sleep(5)
-        return result
-    else:
-        result0={}
-        result={}
-        for try_times in range(3):
-            try:
-                for filename,nword in obj.items():
-                    for word in nword.keys():
-                        lemmatize_word=lemmatizer.lemmatize(word)
-                        result0[lemmatize_word]=nword[word]
-                    result[filename]=result0
-                    result0={}
-            except:
-                print('error on lemmatize_process')
-                time.sleep(5)
-        return result
+    for try_times in range(3): # NLTK is not thread-safe, use simple retry to fix it.
+        try:
+            result = [lemmatizer.lemmatize(word) for word in obj]
+        except:
+            print('error on lemmatize_process')
+            time.sleep(5)
+    return result
+
+
 
 
 def move_other_char(text):
@@ -174,57 +160,80 @@ def get_top_words(tokens, top_number, list_option = True):
 def get_top_words_from_text(text, top_number=10):
     return get_top_words(get_words(text), top_number)
 
-def split_text_to_lines(text,line_max=120):
+def split_text_to_lines(part_dic):
     """
             Args:
-                text: the raw text of the file
-                line_max: the max count of words in one line
+                text: the raw text of the file, in the form of dic, to indicate different parts in file ,
+                like:{'@@ -46,6 +46,15 @@': '#define DEFAULT_LCD_CONTRAST 17\n',  '@@ -76,8 +76,8 @@': '#endif\n \n+  #if ENABLED(ANET_KEYPAD_LCD)'}
             Returns:
-                A dic of the lines of the the raw text of the file. Such as : {'this is me':0,'he is good':1}
-        """
-    text = text.lower()
-    split_text = text.split("\n")  # 行是以(1)回车符分割的(2)一行最多有多少个数字假设微line_max
-    for line in split_text:
-        if line =="":
-            del split_text[split_text.index(line)]
-        if len(line) > line_max:
-            lines = []
-            m = int (len(line) / line_max)
-            for i in range(m):
-                lines.append(line[i * line_max:(i + 1) * line_max])
-            if(len(line)>m*line_max ):
-                lines.append(line[(m) * line_max:])
-            index=split_text.index(line)
-            for x in lines:
-                split_text.insert(index,x)
-                index+=1
-            del split_text[index]
-    i=0 #suppose start from 0
-    dic_text={}
-    for line in split_text:
-        dic_text[line]=i
-        i+=1
-    return dic_text
+                A dic of num of the lines of the the different parts of the file, while distinguishing the origin and new versions(-,+)
+                 Such as : {'@@ -46,6 +46,15 @@':[{'46':this is me','47':'+he is good',...},{'48':-this is me',...}],...}
+    """
+    print("this is split_text_to_lines")
+    part_dic2 = OrderedDict()
+    for part_tag, text in part_dic.items():
+        split_text = text.split("\n")
+        mode = re.compile(r'\d+')
+        part_num=mode.findall(part_tag)#like:['16', '7', '16', '7']
+        origin=filter(lambda x:(x=='' or (x and x[0] != '+')), split_text)
+        thisTime=filter(lambda x:(x=='' or (x and x[0] != '-')),split_text)
+
+        origin_start_num=int(part_num[0])
+        origin_length=int(part_num[1])
+        thisTime_start_num=int(part_num[2])
+        thisTime_length=int(part_num[3])
+
+        origin_dic=OrderedDict()
+        thisTime_dic = OrderedDict()
+        i=0
+        j = 0
+        for l in origin:
+            origin_dic[str(origin_start_num+i)]=l
+            i+=1
+        for l in thisTime:
+            thisTime_dic[str(thisTime_start_num+j)]=l
+            j+=1
+
+        part_dic2[part_tag]=[origin_dic,thisTime_dic]
+    return part_dic2
+
 
 def list_word_linenumber(split_text,tokens):
     """
                Args:
-                   split_text: the dic of split text of raw text. Such as:{'this is me':0,'he is good':1}
-                   tokens: filtered tokens from raw text
+                   split_text: {'@@ -46,6 +46,15 @@':[{'46':this is me','47':'+he is good',...},{'48':-this is me',...}],...}
+                   tokens: filtered tokens from added_code
                Returns:
-                   A dic of the mapping from tokens to the num of lines where they exist.Such as:{'is': [2, 1, 0], 'me': [1, 0], 'this': [2, 1, 0]}
+                   A dic of the mapping from tokens to the num of lines where they exist.
+                   Such as: {'@@ -46,6 +46,15 @@':[{'is': [46, 1, 0], 'me': [1, 0]},{'is': [2, 1, 0], 'me': [1, 0]}],...}
     """
+    print("this is list_word_linenumber ")
+    word_linenumber_dic=OrderedDict()
+    for part_tag,pmlist in split_text.items():
+        plus,minus=pmlist
+        token_dic_plus={}
+        token_dic_minus={}
+        for token in tokens:
+            num_list_plus = []
+            num_list_minus = []
 
-    dic = {}
-    list = []
+            for try_times in range(3):  # NLTK is not thread-safe, use simple retry to fix it.
+                try:
+                    lemmatize_token = lemmatizer.lemmatize(token)
+                except:
+                    print('error on lemmatize_process')
+            for num,line in plus.items():
+                if token in line.lower():
+                    num_list_plus.append(num)
+            for num,line in minus.items():
+                if token in line.lower():
+                    num_list_minus.append(num)
+            if num_list_plus !=[]:
+                token_dic_plus[lemmatize_token]=num_list_plus#notice we save the lemmatized tokens but raw tokens!
+            if num_list_minus!=[]:
+                token_dic_minus[lemmatize_token]=num_list_minus
 
-    for token in tokens:
-        for sentence,num in split_text.items():
-            if token in sentence:
-                list.append(num)
-        dic[token] = list
-        list = []
-    return dic
-
+        word_linenumber_dic[part_tag]=[token_dic_plus,token_dic_minus]
+    return word_linenumber_dic
 
 
