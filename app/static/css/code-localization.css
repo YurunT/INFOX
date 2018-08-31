@@ -1,0 +1,88 @@
+.file-table{
+    width: 100%;
+    border-collapse: separate;
+}
+.selected-tr{
+    background-color:#ffea7f ;
+}
+.selected-num{
+    width: 1%;
+    min-width: 50px;
+    padding-right: 10px;
+    padding-left: 10px;
+    font-family: "SFMono-Regular",Consolas,"Liberation Mono",Menlo,Courier,monospace;
+    font-size: 12px;
+    line-height: 20px;
+    color: rgba(27,31,35,0.3);
+    text-align: right;
+    white-space: nowrap;
+    vertical-align: top;
+    cursor: pointer;
+    display: table-cell;
+}
+.normal-num{
+    width: 1%;
+    min-width: 50px;
+    padding-right: 10px;
+    padding-left: 10px;
+    font-family: "SFMono-Regular",Consolas,"Liberation Mono",Menlo,Courier,monospace;
+    font-size: 12px;
+    line-height: 20px;
+    /*color: rgba(27,31,35,0.3);*/
+    text-align: right;
+    white-space: nowrap;
+    vertical-align: top;
+    cursor: pointer;
+    display: table-cell;
+}
+.expandlines{
+    background-color: #dbedff;
+}
+.sentence-plus::before{
+    content: "+";
+    overflow: visible;
+    font-family: "SFMono-Regular",Consolas,"Liberation Mono",Menlo,Courier,monospace;
+    font-size: 12px;
+    color: #24292e;
+    word-wrap: normal;
+    white-space: pre;
+}
+.sentence-minus::before{
+    content: "-";
+    overflow: visible;
+    font-family: "SFMono-Regular",Consolas,"Liberation Mono",Menlo,Courier,monospace;
+    font-size: 12px;
+    color: #24292e;
+    word-wrap: normal;
+    white-space: pre;
+}
+.selected-sentence::before{
+    content: " ";
+    overflow: visible;
+    font-family: "SFMono-Regular",Consolas,"Liberation Mono",Menlo,Courier,monospace;
+    font-size: 12px;
+    color: #24292e;
+    word-wrap: normal;
+    white-space: pre;
+}
+.normal-sentence::before{
+    content: " ";
+    overflow: visible;
+    font-family: "SFMono-Regular",Consolas,"Liberation Mono",Menlo,Courier,monospace;
+    font-size: 12px;
+    color: #24292e;
+    word-wrap: normal;
+    white-space: pre;
+}
+td.part-tag{
+    padding-top: 4px;
+    padding-bottom: 4px;
+    background-color: #f1f8ff;
+    border-width: 1px 0;
+}
+.part-tag-tr{
+    height: 60px;
+}
+
+
+

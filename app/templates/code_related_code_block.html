@@ -6,56 +6,69 @@
     <hr>
 
 
-    fork_dic:
-    {'fork_name1': {'filename1':{'@@ -46,6 +46,15 @@':[{46:'this is me',47:'-he is good',...},{'+this is me':48,...}],...},...} ,...}
-    word_dic:
-    {'fork_name1': {'filename1':{'@@ -46,6 +46,15 @@':[[46,1,0],[1,0]],'@@ -50,6 +50,15 @@':[[4,5,12],[2]],...},...} ,...}
-
+{#    fork_dic:#}
+{#    {'fork_name1': {'filename1':{'@@ -112,7 +167,7 @@':{'112/167':this is me','-1/170':'+he is good','117/-1':'+he is good',...},..},...}#}
+{#    word_dic:#}
+{#    {'fork_name1': {'filename1':{'@@ -46,6 +46,15 @@':['112/167', '-1/170'],'@@ -50,6 +50,15 @@':['117/-1'],...},...}#}
 
     {% for fork_name,file_list in fork_dic.items() %}
         {% if fork_name in word_dic.keys() %}
-            <div>
+            <div class="for_fork">
                 <h2 style="background-color: #868e96">Fork: {{ fork_name }}</h2>
             {% for file_name,part_items in file_list.items()  %}
                {% if file_name in word_dic[fork_name].keys() %}
-                    <div>
+                    <div class="for_file">
                         <h3>File: {{ file_name.replace('*','.') }}</h3>
-                    {% for part_tag,lines in part_items.items() %}
-                        {% if part_tag in word_dic[fork_name][file_name].keys() %}
-                            <h4>{{ part_tag }}</h4>
-            {#                {% minus,plus=lines %}#}
-                            <div>
-                                <div style="display: inline">
-                                    {% for num,sentence in lines[0].items()  %}
-                                        {% if num in word_dic[fork_name][file_name][part_tag][0] %}
-                                            <div>
-                                                <div style="background-color: #9f421d ; display:inline ;width: 100px; height:100px"  >{{ num }}</div>
-                                                <div style="color: #cb301c ; display:inline; height:100px" >{{ sentence }}</div>
-                                            </div>
-                                        {% else %}
-                                            <div>
-                                                <div style="background-color: #959f9f ; display:inline ;width: 100px; height:100px"   >{{ num }}</div>
-                                                <div style="display: inline; height:100px">{{ sentence }}</div>
-                                            </div>
-                                        {% endif %}
-                                    {% endfor %}
-                                </div>
-            {#                    <div style="display: inline">#}
-            {#                        {% for num,sentence in lines[1].items()  %}#}
-            {##}
-                {#                        <div>#}
-                {#                            <div style="background-color: #9f421d ; display:inline ;width: 100px; height:100px"  >{{ num }}</div>#}
-                {#                            <div style="color: #cb301c ; display:inline; height:100px" >{{ sentence }}</div>#}
-                {#                        </div>#}
-            {#                        <div>#}
-            {#                            <div style="background-color: #959f9f ; display:inline ;width: 100px; height:100px"   >{{ num }}</div>#}
-            {#                            <div style="display: inline; height:100px">{{ sentence }}</div>#}
-            {#                        </div>#}
-            {#                        {% endfor %}#}
-            {#                    </div>#}
-                            </div>
-                        {% endif %}
-                    {% endfor %}
+                        <table class="file-table">
+                            <tbody>
+                                {% for part_tag,lines in part_items.items() %}
+                                    {% if part_tag in word_dic[fork_name][file_name].keys() %}
+                                        <tr class="part-tag-tr">
+                                            <td class="expandlines" colspan="2"></td>
+                                            <td class="part-tag">{{ part_tag }}</td>
+                                        </tr>
+
+                                        {% for num,sentence in lines.items()  %}
+                                            {% if num in word_dic[fork_name][file_name][part_tag] %}
+                                                <tr class="selected-tr">
+                                                    {% if num.split('/')[0] !='-1' and num.split('/')[1] !='-1' %}
+                                                        <td class="selected-num">{{ num.split('/')[0] }}</td>
+                                                        <td class="selected-num">{{ num.split('/')[1] }}</td>
+                                                        <td class="selected-sentence">{{ sentence }}</td>
+                                                    {% elif num.split('/')[0] =='-1' %}
+                                                        <td class="selected-num"></td>
+                                                        <td class="selected-num">{{ num.split('/')[1] }}</td>
+                                                        <td class="sentence-plus">{{ sentence[1:] }}</td>
+                                                    {% else %}
+{#                                                        num.split('/')[1] =='-1'#}
+                                                        <td class="selected-num">{{ num.split('/')[0] }}</td>
+                                                        <td class="selected-num"></td>
+                                                        <td class="sentence-minus">{{ sentence[1:] }}</td>
+                                                    {% endif %}
+                                                </tr>
+                                            {% else %}
+                                                <tr class="normal-tr">
+                                                    {% if num.split('/')[0] !='-1' and num.split('/')[1] !='-1' %}
+                                                        <td class="normal-num">{{ num.split('/')[0] }}</td>
+                                                        <td class="normal-num">{{ num.split('/')[1] }}</td>
+                                                        <td class="normal-sentence">{{ sentence }}</td>
+                                                    {% elif num.split('/')[0] =='-1' %}
+                                                        <td class="normal-num"></td>
+                                                        <td class="normal-num">{{ num.split('/')[1] }}</td>
+                                                        <td class="sentence-plus">{{ sentence[1:] }}</td>
+                                                    {% else %}
+{#                                                        num.split('/')[1] =='-1'#}
+                                                        <td class="normal-num">{{ num.split('/')[0] }}</td>
+                                                        <td class="normal-num"></td>
+                                                        <td class="sentence-minus">{{ sentence[1:] }}</td>
+                                                    {% endif %}
+                                                </tr>
+                                            {% endif %}
+                                        {% endfor %}
+                                    {% endif %}
+                                {% endfor %}
+                            </tbody>
+                        </table>
                     </div>
                 {% endif %}
             {% endfor %}

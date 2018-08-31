@@ -164,76 +164,75 @@ def split_text_to_lines(part_dic):
     """
             Args:
                 text: the raw text of the file, in the form of dic, to indicate different parts in file ,
-                like:{'@@ -46,6 +46,15 @@': '#define DEFAULT_LCD_CONTRAST 17\n',  '@@ -76,8 +76,8 @@': '#endif\n \n+  #if ENABLED(ANET_KEYPAD_LCD)'}
+                Such as:{'@@ -46,6 +46,15 @@': '#define DEFAULT_LCD_CONTRAST 17\n',  '@@ -76,8 +76,8 @@': '#endif\n \n+  #if ENABLED(ANET_KEYPAD_LCD)'}
             Returns:
-                A dic of num of the lines of the the different parts of the file, while distinguishing the origin and new versions(-,+)
-                 Such as : {'@@ -46,6 +46,15 @@':[{'46':this is me','47':'+he is good',...},{'48':-this is me',...}],...}
+                A dic of num of the lines of the the different parts of the file.
+                Such as : {'@@ -112,7 +167,7 @@':{'112/167':this is me','-1/170':'+he is good','117/-1':'+he is good',...},..}
+                p.s. minus symbol represents a blank space
+                e.g.
+                '112/167' means: this line is the #112 in base file while #167 in compared file.
+                '-1/170'  means: this line are not in base file, but only exists in line #170 of compared file, indicating a '+' symbol at the beginning of the line.
+                '117,-1'  means alike.
+
     """
     print("this is split_text_to_lines")
     part_dic2 = OrderedDict()
     for part_tag, text in part_dic.items():
         split_text = text.split("\n")
         mode = re.compile(r'\d+')
-        part_num=mode.findall(part_tag)#like:['16', '7', '16', '7']
-        origin=filter(lambda x:(x=='' or (x and x[0] != '+')), split_text)
-        thisTime=filter(lambda x:(x=='' or (x and x[0] != '-')),split_text)
+        part_num = mode.findall(part_tag)  # like:['16', '7', '16', '7']
+        origin_start_num = int(part_num[0])
+        origin_length = int(part_num[1])
+        thisTime_start_num = int(part_num[2])
+        thisTime_length = int(part_num[3])
 
-        origin_start_num=int(part_num[0])
-        origin_length=int(part_num[1])
-        thisTime_start_num=int(part_num[2])
-        thisTime_length=int(part_num[3])
-
-        origin_dic=OrderedDict()
-        thisTime_dic = OrderedDict()
-        i=0
-        j = 0
-        for l in origin:
-            origin_dic[str(origin_start_num+i)]=l
+        lines_dic = OrderedDict()
+        i = 0
+        for line in split_text:
+            d1 = ""
+            d2 = ""
+            if line != '' and line[0] == '+':
+                d1 = '-1'
+                d2 = str(thisTime_start_num + i)
+            elif line != '' and line[0] == '-':
+                d1 = str(origin_start_num + i)
+                d2 = '-1'
+            else:
+                d1 = str(origin_start_num + i)
+                d2 = str(thisTime_start_num + i)
             i+=1
-        for l in thisTime:
-            thisTime_dic[str(thisTime_start_num+j)]=l
-            j+=1
-
-        part_dic2[part_tag]=[origin_dic,thisTime_dic]
+            key = d1 + '/' + d2
+            lines_dic[key] = line
+        part_dic2[part_tag] = lines_dic
     return part_dic2
 
 
 def list_word_linenumber(split_text,tokens):
     """
                Args:
-                   split_text: {'@@ -46,6 +46,15 @@':[{'46':this is me','47':'+he is good',...},{'48':-this is me',...}],...}
+                   split_text: {'@@ -112,7 +167,7 @@':{'112/167':this is me','-1/170':'+he is good','117/-1':'+me is good',...},..}
                    tokens: filtered tokens from added_code
                Returns:
                    A dic of the mapping from tokens to the num of lines where they exist.
-                   Such as: {'@@ -46,6 +46,15 @@':[{'is': [46, 1, 0], 'me': [1, 0]},{'is': [2, 1, 0], 'me': [1, 0]}],...}
+                   Such as: {'@@ -112,7 +167,7 @@':{'is': ['112/167', '-1/170'], 'me': ['117/-1']},...}
     """
     print("this is list_word_linenumber ")
     word_linenumber_dic=OrderedDict()
-    for part_tag,pmlist in split_text.items():
-        plus,minus=pmlist
-        token_dic_plus={}
-        token_dic_minus={}
+    for part_tag,line_dic in split_text.items():
+        token_dic={}
         for token in tokens:
-            num_list_plus = []
-            num_list_minus = []
-
             for try_times in range(3):  # NLTK is not thread-safe, use simple retry to fix it.
                 try:
                     lemmatize_token = lemmatizer.lemmatize(token)
                 except:
                     print('error on lemmatize_process')
-            for num,line in plus.items():
+            token_list=[]
+            for line_tag, line in line_dic.items():
                 if token in line.lower():
-                    num_list_plus.append(num)
-            for num,line in minus.items():
-                if token in line.lower():
-                    num_list_minus.append(num)
-            if num_list_plus !=[]:
-                token_dic_plus[lemmatize_token]=num_list_plus#notice we save the lemmatized tokens but raw tokens!
-            if num_list_minus!=[]:
-                token_dic_minus[lemmatize_token]=num_list_minus
-
-        word_linenumber_dic[part_tag]=[token_dic_plus,token_dic_minus]
+                    token_list.append(line_tag)
+            if token_list!=[]:
+                token_dic[token]=token_list
+        word_linenumber_dic[part_tag]=token_dic
     return word_linenumber_dic
 
 

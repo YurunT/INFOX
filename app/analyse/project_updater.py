@@ -86,9 +86,9 @@ class ForkUpdater:
             self.all_tokens.append(x)
 
         file_name=file_name.replace('.','*')#notice key of dic in mongodb must not contain '.' or '$' ,so replace '.' with '*'
-        self.all_tokens_dic[file_name]=tokens_dic#{'filename1':{'@@ -46,6 +46,15 @@':[{'is': [46, 1, 0], 'me': [1, 0]},{'is': [2, 1, 0], 'me': [1, 0]}],...},...}
-        self.file_part_dic[file_name]=split_text#{'filename1':{'@@ -46,6 +46,15 @@':[{'this is me':46,'+he is good':47,...},{'-this is me':48,...}],...},...}
-        print("finish file_analyse for",file_name)
+        self.all_tokens_dic[file_name]=tokens_dic#{'filename1':{'@@ -112,7 +167,7 @@':{'is': ['112/167', '-1/170'], 'me': ['117/-1']},...},...}
+        self.file_part_dic[file_name]=split_text#{'filename1':{'@@ -112,7 +167,7 @@':{'112/167':this is me','-1/170':'+he is good','117/-1':'+he is good',...},..},...}
+        print("finish file_analyse for:",file_name)
 
 
 
@@ -158,18 +158,10 @@ class ForkUpdater:
         print(self.all_tokens_dic)
         print("file_part_dic")
         print(self.file_part_dic)
+
         self.all_lemmatize_tokens = word_extractor.lemmatize_process(self.all_tokens)
-        # self.all_lemmatize_tokens_dic=word_extractor.lemmatize_process(self.all_tokens_dic)
-
-
-
         project_name_stop_words = (self.project_name + '/' + self.fork_name).split('/')
         self.all_lemmatize_tokens = list(filter(lambda x: x not in project_name_stop_words, self.all_lemmatize_tokens))
-        # for filename,nword in self.all_lemmatize_tokens_dic.items():
-        #     nword=dict(filter(lambda x:x[0] not in project_name_stop_words,nword.items()))
-        #     self.all_lemmatize_tokens_dic[filename]=nword
-
-
         # Update forks into database.
         ProjectFork(
             full_name=self.project_name + '/' + self.fork_name,
@@ -198,7 +190,7 @@ class ForkUpdater:
 
         print("saving filewords!!!")
         word_dic=self.rebuild_alltokensdic()
-        #{'word1':{'filename1':{'@@ -46,6 +46,15 @@':[[46,1,0],[1,0]],'@@ -50,6 +50,15 @@':[[4,5,12],[2]],...},...},'word2':{...},...}
+        #{'word1':{'filename1':{'@@ -46,6 +46,15 @@':['112/167', '-1/170'],'@@ -50,6 +50,15 @@':['117/-1'],...},...},'word2':{...},...}
         #notice: fork_name R file_part_pmlist_dic => 1:1
         for word_name,dic0 in word_dic.items():
                 FileWords(
@@ -213,39 +205,32 @@ class ForkUpdater:
         FileLines(
             project_name=self.project_name,
             fork_name=self.fork_name,
-            file_part_line_num_dic=self.file_part_dic
+            file_part_line_num_dic=self.file_part_dic#{'filename1':{'@@ -112,7 +167,7 @@':{'112/167':this is me','-1/170':'+he is good','117/-1':'+he is good',...},..},...}
         ).save()
         print("FileLines saved!")
         print("finish work for this fork:",self.fork_name)
 
     def rebuild_alltokensdic(self):
         """
-        :return: new structure of self.all_tokens_dic,like:
-        {'word1':{'filename1':{'@@ -46,6 +46,15 @@':[[46,1,0],[1,0]],'@@ -50,6 +50,15 @@':[[4,5,12],[2]],...},...},'word2':{...},...}
+        :return: new structure of self.all_tokens_dic:
+        Such as:#{'filename1':{'@@ -112,7 +167,7 @@':{'is': ['112/167', '-1/170'], 'me': ['117/-1']},...},...}
+
+        Such as:
+        {'word1':{'filename1':{'@@ -46,6 +46,15 @@':['112/167', '-1/170'],'@@ -50,6 +50,15 @@':['117/-1'],...},...},'word2':{...},...}
         """
         word_dic={}
         for word in self.all_lemmatize_tokens:
             file_dic={}
             for file_name, file_content in self.all_tokens_dic.items():
-                part_dic = {}
+                part_dic = OrderedDict()
                 for part_tag,part_content in file_content.items():
-                    plus,minus=part_content
-                    list1=[]
-                    list2=[]
-                    for w,l in plus.items():
-                        if w == word:
-                            list1=l
-                    for w2,l2 in minus.items():
-                        if w2==word:
-                            list2=l
-                    if list1 == [] and list2 == []:
-                        continue
-                    part_dic[part_tag]=[list1,list2]
-                if part_dic!={}:
+                    for word_name,line_list in part_content.items():
+                        if word==word_name:
+                            part_dic[part_tag]=line_list
+                if len(part_dic)!=0:
                     file_dic[file_name]=part_dic
-            if file_dic!={}:
+            if file_dic !={}:
                 word_dic[word]=file_dic
-
         return word_dic
 
 
