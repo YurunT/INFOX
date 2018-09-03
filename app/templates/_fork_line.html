@@ -1,0 +1,19 @@
+<div>
+    {% if mode=='single' %}
+        {% if display=='unified' %}
+            <a class="unified-split selected-btn" href="{{ url_for('main.load_keyword_related_block', keyword=keyword,project_name=project_name,fork_name=fork_name,mode='single',display="unified") }}">Unified</a>
+            <a class="unified-split" href="{{ url_for('main.load_keyword_related_block', keyword=keyword,project_name=project_name,fork_name=fork_name,mode='single',display="split") }}">Split</a>
+        {% else %}
+            <a class="unified-split " href="{{ url_for('main.load_keyword_related_block', keyword=keyword,project_name=project_name,fork_name=fork_name,mode='single',display="unified") }}">Unified</a>
+            <a class="unified-split selected-btn" href="{{ url_for('main.load_keyword_related_block', keyword=keyword,project_name=project_name,fork_name=fork_name,mode='single',display="split") }}">Split</a>
+        {% endif %}
+    {% elif mode=='many' %}
+        {% if display=='unified' %}
+            <a class="unified-split selected-btn" href="{{ url_for('main.load_keyword_related_block', keyword=keyword,project_name=project_name,fork_name="",mode='many',display="unified") }}">Unified</a>
+            <a class="unified-split" href="{{ url_for('main.load_keyword_related_block', keyword=keyword,project_name=project_name,fork_name="",mode='many',display="split") }}">Split</a>
+        {% else %}
+            <a class="unified-split " href="{{ url_for('main.load_keyword_related_block', keyword=keyword,project_name=project_name,fork_name="",mode='many',display="unified") }}">Unified</a>
+            <a class="unified-split selected-btn" href="{{ url_for('main.load_keyword_related_block', keyword=keyword,project_name=project_name,fork_name="",mode='many',display="split") }}">Split</a>
+        {% endif %}
+    {% endif %}
+</div>

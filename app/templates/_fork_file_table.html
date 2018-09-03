@@ -1,0 +1,54 @@
+<div>
+    <h1 style="color: #0c0c0c">Project: {{project_name}}    Keyword: {{keyword}}</h1>
+
+    {% if mode=='single' %}
+        <a href="{{ url_for('main.load_keyword_related_block', keyword=keyword,project_name=project_name,fork_name="",mode="many",display=display) }}">Click here to compare across forks>></a>
+        <hr>
+        <div>
+            <table class="list-table" >
+                <thead>
+                <td>Fork</td>
+                <td>File</td>
+                </thead>
+            {% for forkName in fork_dic.keys() %}
+                <tbody>
+                    {% for fileName in word_dic[forkName].keys() %}
+                    <tr>
+                    <td>{{ forkName }}</td>
+                    <td>{{ fileName.replace('*','.') }}</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            {% endfor %}
+            </table>
+        </div>
+
+    {% elif mode=='none1' %}
+        <hr>
+        <h2>Sorry, not in this fork >...<</h2>
+        <a href="{{ url_for('main.load_keyword_related_block', keyword=keyword,project_name=project_name,fork_name="",mode="many",display=display) }}">Maybe the word is in other forks, click here to see >></a>
+    {% elif mode=='none2'%}
+        <hr>
+        <h2>So sorry that we can't find anything here either>...<  View other Representative Keywords?</h2>
+    {% else %}
+        <hr>
+        <div>
+            <table class="list-table" >
+                <thead>
+                <td>Fork</td>
+                <td>File</td>
+                </thead>
+            {% for forkName in fork_dic.keys() %}
+                <tbody>
+                    {% for fileName in word_dic[forkName].keys() %}
+                    <tr>
+                    <td>{{ forkName }}</td>
+                    <td>{{ fileName.replace('*','.') }}</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            {% endfor %}
+            </table>
+        </div>
+    {% endif %}
+</div>

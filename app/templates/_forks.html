@@ -326,7 +326,7 @@ $(document).ready(function() {
                 <!-- {{ ", ".join(fork.key_words_lemmatize_tfidf[:6] | word_length_limit) }} -->
 
                 {% for keyword in fork.key_words_lemmatize_tfidf[:6] | word_length_limit %}
-                    <a href="{{ url_for('main.load_keyword_related_block', keyword=keyword,project_name=fork.project_name) }}">{{ keyword }}</a>
+                    <a href="{{ url_for('main.load_keyword_related_block', keyword=keyword,project_name=fork.project_name,fork_name=fork.fork_name,mode="single",display='unified') }}">{{ keyword }}</a>
                 {% endfor %}
 
             </td>

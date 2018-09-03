@@ -259,23 +259,40 @@ def about():
 
 @main.route('/load_keyword_related_block', methods=['GET', 'POST'])
 def load_keyword_related_block():
-
-    keyword=request.args.get('keyword')
-    project_name1=request.args.get('project_name')
-    _selected_fork_info=FileWords.objects(project_name=project_name1,word_name=keyword)
-
     word_forks_dic={}
     forks_text_dic={}
-    for info in _selected_fork_info:
-        forkName = info.fork_name
-        forkDic = info.file_part_pmlist_dic
-        word_forks_dic[forkName]=forkDic
-    for fork in word_forks_dic.keys():
-        text=FileLines.objects(project_name=project_name1,fork_name=fork).first()
-        forks_text_dic[fork]=text.file_part_line_num_dic
+    keyword=request.args.get('keyword')
+    project_name1=request.args.get('project_name')
+    fork_name=request.args.get('fork_name')
+    mode=request.args.get('mode')
+    display=request.args.get('display')
+    if mode=="single":#single fork query mode.fork_name specified
+        _selected_fork_info = FileWords.objects(project_name=project_name1, word_name=keyword,fork_name=fork_name).first()
+        if _selected_fork_info is None:
+            return render_template('code_related_code_block.html', project_name=project_name1, keyword=keyword,fork_dic=forks_text_dic, word_dic=word_forks_dic, mode='none1',display=display)
+        word_forks_dic[fork_name]=_selected_fork_info.file_part_pmlist_dic
+        text=FileLines.objects(project_name=project_name1,fork_name=fork_name).first()
+        forks_text_dic[fork_name]=text.file_part_line_num_dic
+        return render_template('code_related_code_block.html', project_name=project_name1, keyword=keyword,fork_dic=forks_text_dic, word_dic=word_forks_dic,mode='single',display=display)
+    else:#many forks query mode. fork_name not specified
+        _selected_fork_info=FileWords.objects(project_name=project_name1,word_name=keyword)
 
 
-    return render_template('code_related_code_block.html', project_name=project_name1, keyword=keyword,fork_dic=forks_text_dic,word_dic=word_forks_dic)
+
+        for info in _selected_fork_info:
+            forkName = info.fork_name
+            forkDic = info.file_part_pmlist_dic
+            word_forks_dic[forkName]=forkDic
+        for fork in word_forks_dic.keys():
+            text=FileLines.objects(project_name=project_name1,fork_name=fork).first()
+            forks_text_dic[fork]=text.file_part_line_num_dic
+        if word_forks_dic=={} or forks_text_dic=={}:
+            return render_template('code_related_code_block.html', project_name=project_name1, keyword=keyword,
+                                   fork_dic=forks_text_dic, word_dic=word_forks_dic, mode='none2',display=display)
+
+
+        return render_template('code_related_code_block.html', project_name=project_name1, keyword=keyword,fork_dic=forks_text_dic,word_dic=word_forks_dic,mode='many',display=display)
+
 
 
 # ---------------- Following is all admin required. ----------------

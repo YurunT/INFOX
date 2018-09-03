@@ -1,0 +1,52 @@
+<div class="unified-table">
+    <table class="file-table">
+        <tbody>
+            {% for part_tag,lines in part_items.items() %}
+                {% if part_tag in word_dic[fork_name][file_name].keys() %}
+                    <tr class="part-tag">
+                        <td class="expand-symbol" colspan="2"></td>
+                        <td class="part-tag">{{ part_tag }}</td>
+                    </tr>
+
+                    {% for num,sentence in lines.items()  %}
+                        {% if num in word_dic[fork_name][file_name][part_tag] %}
+                            <tr class="selected">
+                                {% if num.split('/')[0] !='-1' and num.split('/')[1] !='-1' %}
+                                    <td class="num selected">{{ num.split('/')[0] }}</td>
+                                    <td class="num selected">{{ num.split('/')[1] }}</td>
+                                    <td class="blob-code blank"><span class="blob-code-inner marker-context unified">{{ sentence }}</span></td>
+                                {% elif num.split('/')[0] =='-1' %}
+                                    <td class="num selected"></td>
+                                    <td class="num selected">{{ num.split('/')[1] }}</td>
+                                    <td class="blob-code plus"><span class="blob-code-inner marker-addition unified">{{ sentence[1:] }}</span></td>
+                                {% else %}
+{#                                                        num.split('/')[1] =='-1'#}
+                                    <td class="num selected">{{ num.split('/')[0] }}</td>
+                                    <td class="num selected"></td>
+                                    <td class="blob-code minus"><span class="blob-code-inner marker-deletion unified">{{ sentence[1:] }}</span></td>
+                                {% endif %}
+                            </tr>
+                        {% else %}
+                            <tr class="normal">
+                                {% if num.split('/')[0] !='-1' and num.split('/')[1] !='-1' %}
+                                    <td class="num">{{ num.split('/')[0] }}</td>
+                                    <td class="num">{{ num.split('/')[1] }}</td>
+                                    <td class="blob-code blank"><span class="blob-code-inner marker-context unified">{{ sentence }}</span></td>
+                                {% elif num.split('/')[0] =='-1' %}
+                                    <td class="num"></td>
+                                    <td class="num">{{ num.split('/')[1] }}</td>
+                                    <td class="blob-code plus"><span class="blob-code-inner marker-addition unified">{{ sentence[1:] }}</span></td>
+                                {% else %}
+{#                                                        num.split('/')[1] =='-1'#}
+                                    <td class="num">{{ num.split('/')[0] }}</td>
+                                    <td class="num"></td>
+                                    <td class="blob-code minus"><span class="blob-code-inner marker-deletion unified">{{ sentence[1:] }}</span></td>
+                                {% endif %}
+                            </tr>
+                        {% endif %}
+                    {% endfor %}
+                {% endif %}
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
