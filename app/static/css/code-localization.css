@@ -54,6 +54,9 @@ td.part-tag{
 .repo-content{
     width: available;
 }
+a.go-back-to-top{
+    color: #24292e;
+}
 a.unified-split{
     color: #24292e;
     background-color: #eff3f6;
@@ -114,4 +117,17 @@ span.blob-code-inner.marker-deletion::before{
     word-wrap: normal;
     white-space: pre;
 }
+div.file-name-h3{
+    display: inline-block;
 
+}
+div.go-back-to-top{
+    display: inline-block;
+    float: right;
+}
+div.fork-name{
+    background-color: #868e96
+}
+div.list-table-div{
+    display: none;
+}

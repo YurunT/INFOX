@@ -1,5 +1,5 @@
-<div>
-    <h1 style="color: #0c0c0c">Project: {{project_name}}    Keyword: {{keyword}}</h1>
+<div id="fork-file-list">
+    <h1 style="color: #0c0c0c">Project: <i>{{project_name}}</i>    Keyword: <i>{{keyword}}</i></h1>
 
     {% if mode=='single' %}
         <a href="{{ url_for('main.load_keyword_related_block', keyword=keyword,project_name=project_name,fork_name="",mode="many",display=display) }}">Click here to compare across forks>></a>
@@ -14,8 +14,8 @@
                 <tbody>
                     {% for fileName in word_dic[forkName].keys() %}
                     <tr>
-                    <td>{{ forkName }}</td>
-                    <td>{{ fileName.replace('*','.') }}</td>
+                        <td><a href="#{{ forkName }}">{{ forkName }}</a> </td>
+                        <td><a href="#{{ forkName }}/{{ fileName.replace('*','.') }}">{{ fileName.replace('*','.') }}</a></td>
                     </tr>
                 {% endfor %}
                 </tbody>
@@ -32,7 +32,8 @@
         <h2>So sorry that we can't find anything here either>...<  View other Representative Keywords?</h2>
     {% else %}
         <hr>
-        <div>
+        <div><button class="show-hide">Show items queried here</button></div>
+        <div class="list-table-div">
             <table class="list-table" >
                 <thead>
                 <td>Fork</td>
@@ -42,8 +43,8 @@
                 <tbody>
                     {% for fileName in word_dic[forkName].keys() %}
                     <tr>
-                    <td>{{ forkName }}</td>
-                    <td>{{ fileName.replace('*','.') }}</td>
+                        <td><a href="#{{ forkName }}">{{ forkName }}</a></td>
+                        <td><a href="#{{ forkName }}/{{ fileName.replace('*','.') }}">{{ fileName.replace('*','.') }}</a></td>
                     </tr>
                 {% endfor %}
                 </tbody>

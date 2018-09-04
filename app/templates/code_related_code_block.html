@@ -1,5 +1,4 @@
 {% extends "base.html" %}
-<script type="text/javascript"> var $SCRIPT_ROOT = {{ request.script_root|tojson|safe }}; </script>
 {% block page_content %}
     <div class="repo-content">
         {% include "_fork_file_table.html" %}
@@ -11,14 +10,18 @@
 
         {% for fork_name,file_list in fork_dic.items() %}
             {% if fork_name in word_dic.keys() %}
-                <div class="for_fork">
-                    <h2 style="background-color: #868e96">Fork: {{ fork_name }}</h2>
+                <div id="{{ fork_name }}">
+                    <div class="fork-name">
+                        <div class="fork-name-h2"><h2>Fork: {{ fork_name }}</h2></div>
+                    </div>
                     {% include "_fork_line.html" %}
-
                     {% for file_name,part_items in file_list.items()  %}
                        {% if file_name in word_dic[fork_name].keys() %}
-                            <div class="for_file">
-                                <h3>File: {{ file_name.replace('*','.') }}</h3>
+                            <div id="{{ fork_name }}/{{ file_name.replace('*','.') }}">
+                                <div>
+                                    <div class="file-name-h3"><h3>File: {{ file_name.replace('*','.') }}</h3></div>
+                                    <div class="go-back-to-top" align="right"><a class="go-back-to-top" href="#fork-file-list"><u>Go back to the top</u></a></div>
+                                </div>
                                 {% if display=='unified' %}
                                     {% include "_unified_table.html" %}
                                 {% else %}
